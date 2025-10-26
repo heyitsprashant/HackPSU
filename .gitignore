@@ -1,27 +1,49 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+(
+echo # Dependencies
+echo /node_modules
+echo /.pnp
+echo .pnp.js
+echo.
+echo # Build outputs
+echo /build
+echo /dist
+echo.
+echo # System files
+echo .DS_Store
+echo Thumbs.db
+echo.
+echo # Logs
+echo npm-debug.log*
+echo yarn-debug.log*
+echo yarn-error.log*
+echo pnpm-debug.log*
+echo.
+echo # Environment variables
+echo .env
+echo .env.local
+echo .env.development.local
+echo .env.test.local
+echo .env.production.local
+echo.
+echo # Editor settings
+echo .idea/
+echo .vscode/
+echo *.suo
+echo *.ntvs*
+echo *.njsproj
+echo *.sln
+echo *.sw?
+echo.
+echo # Coverage and test reports
+echo coverage
+echo /.nyc_output
+echo.
+echo # Misc cache
+echo .cache/
+echo .parcel-cache/
+echo .next/
+echo out/
+echo.
+echo # Temporary files
+echo *.tmp
+) > .gitignore
