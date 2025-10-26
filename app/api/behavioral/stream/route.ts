@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { GoogleGenerativeAI } from "@google/generative-ai"
 
+// OpenRouter API key for Whisper transcription
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
+
 export async function POST(req: NextRequest) {
   try {
     const form = await req.formData()
@@ -32,6 +35,45 @@ export async function POST(req: NextRequest) {
     const genAI = new GoogleGenerativeAI(apiKey)
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
 
+    // Transcribe audio using OpenRouter Whisper API
+    let audioTranscript = ""
+    if (audio && OPENROUTER_API_KEY) {
+      try {
+        console.log('🎤 [Behavioral Stream] Transcribing audio with OpenRouter Whisper...')
+        
+        // Convert audio to base64 for OpenRouter API
+        const audioBuffer = Buffer.from(await audio.arrayBuffer())
+        const audioBase64 = audioBuffer.toString('base64')
+        
+        // Call OpenRouter's Whisper endpoint
+        const whisperResponse = await fetch('https://openrouter.ai/api/v1/audio/transcriptions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'whisper-1',
+            file: audioBase64,
+            language: 'en',
+          }),
+        })
+        
+        if (whisperResponse.ok) {
+          const whisperData = await whisperResponse.json()
+          audioTranscript = whisperData.text || ""
+          console.log('✅ [Behavioral Stream] Whisper transcription:', audioTranscript.substring(0, 100) + '...')
+        } else {
+          const errorText = await whisperResponse.text()
+          console.warn('⚠️ [Behavioral Stream] OpenRouter Whisper failed:', errorText)
+        }
+      } catch (whisperError: any) {
+        console.warn('⚠️ [Behavioral Stream] Whisper transcription error:', whisperError.message)
+      }
+    } else if (audio && !OPENROUTER_API_KEY) {
+      console.warn('⚠️ [Behavioral Stream] OPENROUTER_API_KEY not configured, skipping transcription')
+    }
+
     const parts: any[] = []
     const frameBuffer = Buffer.from(await frame.arrayBuffer())
     parts.push({
@@ -41,15 +83,7 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    if (audio) {
-      const audioBuffer = Buffer.from(await audio.arrayBuffer())
-      parts.push({
-        inlineData: {
-          data: audioBuffer.toString("base64"),
-          mimeType: audio.type || "audio/webm",
-        },
-      })
-    }
+    // Note: We don't send audio to Gemini anymore, we use Whisper for transcription
 
     const prompt = `You are an expert behavioral interview coach with deep expertise in body language, communication, and professional presentation analysis.
 
@@ -70,13 +104,13 @@ ANALYZE THE LIVE VIDEO FRAME:
    - Measure: Shoulders back, sitting straight, proper framing
    - High score: Professional positioning; Low score: Slouching, off-center
 
-4. SPEECH CLARITY (0-100) ${audio ? '- AUDIO PROVIDED' : '- NO AUDIO, estimate from visual cues'}:
-   ${audio ? '- Analyze articulation, pace, volume, and clarity from audio' : '- Estimate based on mouth movements, facial tension, breathing patterns'}
+4. SPEECH CLARITY (0-100) ${audioTranscript ? '- AUDIO TRANSCRIBED' : '- NO AUDIO, estimate from visual cues'}:
+   ${audioTranscript ? `- Analyze clarity based on transcription: "${audioTranscript.substring(0, 200)}"` : '- Estimate based on mouth movements, facial tension, breathing patterns'}
    - Measure: Clear pronunciation, appropriate pace, good volume
    - High score: Clear, well-paced speech; Low score: Mumbling, too fast/slow
 
 5. TONE CONFIDENCE (0-100):
-   ${audio ? '- Analyze vocal confidence, steadiness, assertiveness from audio' : '- Estimate from facial confidence, posture, and body language'}
+   ${audioTranscript ? '- Infer confidence from transcription word choice and structure' : '- Estimate from facial confidence, posture, and body language'}
    - Measure: Vocal strength, steady delivery, minimal hesitation
    - High score: Confident tone; Low score: Uncertain, shaky voice
 
@@ -103,11 +137,10 @@ Return ONLY valid JSON (no markdown, no explanation):
     "expressions": <number 0-100>,
     "engagement": <number 0-100>
   },
-  "transcript": "${audio ? 'transcribe what you hear' : ''}",
   "observations": "2-3 sentence summary of what you observe",
   "topStrength": "one key strength",
   "topWeakness": "one area to improve"
-}${transcript ? `\n\nCONTEXT - Previous transcript: "${transcript.slice(-300)}"` : ""}`
+}${transcript || audioTranscript ? `\n\nCONTEXT - Transcript: "${(audioTranscript || transcript).slice(-300)}"` : ""}
 
     parts.unshift({ text: prompt })
 
@@ -158,11 +191,17 @@ Return ONLY valid JSON (no markdown, no explanation):
     data.topStrength = data.topStrength || ""
     data.topWeakness = data.topWeakness || ""
     
+    // Add the Whisper-transcribed text to the response
+    if (audioTranscript) {
+      data.transcript = audioTranscript
+    }
+    
     console.log('✅ [Behavioral Stream] Analysis complete:', {
       avgScore: Object.values(data.metrics).reduce((a: number, b: number) => a + b, 0) / 6,
       hasObservations: !!data.observations,
       hasStrength: !!data.topStrength,
-      hasWeakness: !!data.topWeakness
+      hasWeakness: !!data.topWeakness,
+      transcriptLength: audioTranscript.length
     })
 
     return NextResponse.json({ ok: true, data, sessionId })
