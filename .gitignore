@@ -1,40 +1,65 @@
-# dependencies
-node_modules
-
-# builds
-.next
-out
-
-# env
-.env*
-
-# misc
-.DS_Store
-
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
+# Dependencies
 /node_modules
+/.pnp
+.pnp.js
 
-# next.js
+# Build outputs
+/build
+/dist
 /.next/
 /out/
 
-# production
-/build
+# System files
+.DS_Store
+Thumbs.db
 
-# debug
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+pnpm-debug.log*
 
-# env files
+# Environment variables
+.env
 .env*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# vercel
+# Editor settings
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Coverage and test reports
+coverage
+/.nyc_output
+
+# Misc cache
+.cache/
+.parcel-cache/
+
+# Vercel
 .vercel
 
-# typescript
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Temporary files
+*.tmp
+
+# Backend
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+backend/interview_practice.db
