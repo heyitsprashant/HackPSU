@@ -2,13 +2,16 @@
 // In production, this would call the Gemini API
 
 const responseTemplates: Record<string, string> = {
-  "binary search tree": `A Binary Search Tree (BST) is a tree data structure where each node has at most two children. The key property is:
-- All nodes in the left subtree have values less than the parent node
-- All nodes in the right subtree have values greater than the parent node
+  "binary search tree": `**Binary Search Tree (BST)**
 
-This ordering property makes searching very efficient - O(log n) on average!
+A Binary Search Tree is a tree data structure where each node has at most two children. The key property is:
 
-Example:
+- All nodes in the left subtree have values **less than** the parent node
+- All nodes in the right subtree have values **greater than** the parent node
+
+**Key Benefit:** This ordering property makes searching very efficient - **O(log n)** on average!
+
+**Example Structure:**
        8
       / \\
      3   10
@@ -17,23 +20,27 @@ Example:
 
 Would you like me to explain BST operations like insertion or deletion?`,
 
-  "stack and queue": `Great question! Both are linear data structures, but they differ in how elements are accessed:
+  "stack and queue": `**Stack vs Queue: Key Differences**
+
+Great question! Both are linear data structures, but they differ in how elements are accessed:
 
 **Stack (LIFO - Last In, First Out)**
-- Think of a stack of plates - you add and remove from the top
+- Think of a stack of plates - you add and remove from the **top**
 - Operations: push() and pop()
-- Use cases: Function call stack, undo operations, expression evaluation
+- **Use cases:** Function call stack, undo operations, expression evaluation
 
 **Queue (FIFO - First In, First Out)**
-- Think of a line at a store - first person in line is served first
+- Think of a line at a store - first person in line is served **first**
 - Operations: enqueue() and dequeue()
-- Use cases: Task scheduling, breadth-first search, print queue
+- **Use cases:** Task scheduling, breadth-first search, print queue
 
-The key difference: Stack removes the most recently added item, while Queue removes the oldest item.
+**Key Difference:** Stack removes the most recently added item, while Queue removes the oldest item.
 
 Would you like to see code examples?`,
 
-  "dynamic programming": `Dynamic Programming (DP) is an optimization technique that solves complex problems by breaking them down into simpler subproblems.
+  "dynamic programming": `**Dynamic Programming (DP)**
+
+Dynamic Programming is an optimization technique that solves complex problems by breaking them down into simpler subproblems.
 
 **Key Principles:**
 1. **Optimal Substructure**: The optimal solution contains optimal solutions to subproblems
@@ -41,34 +48,36 @@ Would you like to see code examples?`,
 3. **Memoization**: Store results to avoid recomputation
 
 **Classic Example - Fibonacci:**
-Without DP: O(2^n) - recalculates same values
-With DP: O(n) - stores and reuses calculated values
+- Without DP: **O(2^n)** - recalculates same values
+- With DP: **O(n)** - stores and reuses calculated values
 
 **Two Approaches:**
-- Top-down (Memoization): Recursive with caching
-- Bottom-up (Tabulation): Iterative, builds solution from base cases
+- **Top-down (Memoization)**: Recursive with caching
+- **Bottom-up (Tabulation)**: Iterative, builds solution from base cases
 
-Common DP problems: Knapsack, longest common subsequence, coin change.
+**Common DP Problems:** Knapsack, longest common subsequence, coin change.
 
 Would you like to see a specific example?`,
 
-  "big o notation": `Big O notation describes how an algorithm's runtime or space requirements grow as the input size increases.
+  "big o notation": `**Big O Notation**
+
+Big O notation describes how an algorithm's runtime or space requirements grow as the input size increases.
 
 **Common Time Complexities (from fastest to slowest):**
-- O(1) - Constant: Array access by index
-- O(log n) - Logarithmic: Binary search
-- O(n) - Linear: Simple loop through array
-- O(n log n) - Linearithmic: Merge sort, quick sort
-- O(n²) - Quadratic: Nested loops
-- O(2^n) - Exponential: Recursive fibonacci
-- O(n!) - Factorial: Generating all permutations
+- **O(1)** - Constant: Array access by index
+- **O(log n)** - Logarithmic: Binary search
+- **O(n)** - Linear: Simple loop through array
+- **O(n log n)** - Linearithmic: Merge sort, quick sort
+- **O(n²)** - Quadratic: Nested loops
+- **O(2^n)** - Exponential: Recursive fibonacci
+- **O(n!)** - Factorial: Generating all permutations
 
 **Key Points:**
-- We focus on worst-case scenarios
+- We focus on **worst-case scenarios**
 - Drop constants: O(2n) becomes O(n)
 - Drop lower-order terms: O(n² + n) becomes O(n²)
 
-Think of it as: "How does performance change when I double the input size?"
+**Think of it as:** "How does performance change when I double the input size?"
 
 Want to analyze a specific algorithm?`,
 
@@ -98,7 +107,9 @@ Want to analyze a specific algorithm?`,
 
 Which pattern would you like to explore in detail?`,
 
-  "hash table": `A hash table (or hash map) is a data structure that provides very fast lookups, insertions, and deletions - typically O(1) average time!
+  "hash table": `**Hash Table (Hash Map)**
+
+A hash table is a data structure that provides very fast lookups, insertions, and deletions - typically **O(1)** average time!
 
 **How It Works:**
 1. Uses a hash function to convert keys into array indices
@@ -120,9 +131,9 @@ When two keys hash to the same index:
 - Detecting duplicates
 
 **Trade-offs:**
-✓ Fast average-case operations O(1)
-✗ Worst case can be O(n) with many collisions
-✗ No ordering of elements
+- ✓ Fast average-case operations **O(1)**
+- ✗ Worst case can be **O(n)** with many collisions
+- ✗ No ordering of elements
 
 Would you like to see a hash table implementation?`,
 }

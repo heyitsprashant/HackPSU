@@ -9,23 +9,28 @@ export async function POST(req: Request) {
 
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
 
-    const prompt = `You are evaluating a coding interview answer.
+    const rubric = correctAnswer
+      ? `Expected Approach: ${correctAnswer}`
+      : `If no canonical solution provided, first derive a concise expected approach (in your head), then grade.`
+
+    const prompt = `You are evaluating a technical interview answer.
 
 Question: ${question}
 
-Expected Approach: ${correctAnswer}
+${rubric}
 
 User's Answer: ${userAnswer}
 
 Evaluate if the user's answer demonstrates:
-1. Correct understanding of the problem
-2. Valid algorithmic approach
-3. Reasonable time/space complexity
+1. Correct understanding of the problem and key constraints
+2. A valid algorithm or design that solves the problem
+3. Reasonable time/space complexity for the expected difficulty
 
-Return ONLY a JSON object (no markdown, no code blocks):
+Return ONLY JSON (no markdown):
 {
-  "isCorrect": true or false,
-  "feedback": "brief explanation"
+  "isCorrect": true|false,
+  "feedback": "1-3 sentences on why",
+  "improvements": ["actionable tip 1", "actionable tip 2"]
 }`
 
     const result = await model.generateContent(prompt)

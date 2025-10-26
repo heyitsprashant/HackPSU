@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -8,8 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider"
 import { Button } from "@/components/ui/button"
 import { Volume2, Focus, Eye, Type, Palette, Clock, Brain, Sparkles, Mail, ExternalLink } from "lucide-react"
+import { useTheme } from "@/components/theme-provider"
 
 export default function SettingsPage() {
+  const { theme, setTheme } = useTheme()
+  
+  // Load settings from localStorage on mount
   const [voiceNarration, setVoiceNarration] = useState(false)
   const [soundEffects, setSoundEffects] = useState(true)
   const [pomodoroTimer, setPomodoroTimer] = useState(false)
@@ -18,27 +22,120 @@ export default function SettingsPage() {
   const [highContrast, setHighContrast] = useState(false)
   const [dyslexiaFont, setDyslexiaFont] = useState(false)
   const [increasedSpacing, setIncreasedSpacing] = useState(false)
-  const [theme, setTheme] = useState("light")
   const [fontSize, setFontSize] = useState([16])
   const [focusDuration, setFocusDuration] = useState([25])
   const [showEmailSetup, setShowEmailSetup] = useState(false)
+  const [voiceSpeed, setVoiceSpeed] = useState("normal")
+  const [layoutMode, setLayoutMode] = useState("consistent")
+  const [sessionLength, setSessionLength] = useState("30")
+  const [breakDuration, setBreakDuration] = useState("5")
+
+  // Load settings from localStorage
+  useEffect(() => {
+    const loadSettings = () => {
+      try {
+        const saved = localStorage.getItem('accessibility-settings')
+        if (saved) {
+          const settings = JSON.parse(saved)
+          setVoiceNarration(settings.voiceNarration ?? false)
+          setSoundEffects(settings.soundEffects ?? true)
+          setPomodoroTimer(settings.pomodoroTimer ?? false)
+          setBreakReminders(settings.breakReminders ?? true)
+          setReducedMotion(settings.reducedMotion ?? false)
+          setHighContrast(settings.highContrast ?? false)
+          setDyslexiaFont(settings.dyslexiaFont ?? false)
+          setIncreasedSpacing(settings.increasedSpacing ?? false)
+          setFontSize(settings.fontSize ?? [16])
+          setFocusDuration(settings.focusDuration ?? [25])
+          setVoiceSpeed(settings.voiceSpeed ?? "normal")
+          setLayoutMode(settings.layoutMode ?? "consistent")
+          setSessionLength(settings.sessionLength ?? "30")
+          setBreakDuration(settings.breakDuration ?? "5")
+        }
+      } catch (error) {
+        console.error('Failed to load settings:', error)
+      }
+    }
+    loadSettings()
+  }, [])
+
+  // Apply accessibility settings to document
+  useEffect(() => {
+    const root = document.documentElement
+    
+    // Apply dyslexia font
+    if (dyslexiaFont) {
+      root.style.setProperty('--font-family', '"OpenDyslexic", -apple-system, sans-serif')
+    } else {
+      root.style.removeProperty('--font-family')
+    }
+
+    // Apply increased spacing
+    if (increasedSpacing) {
+      root.style.setProperty('--line-height', '1.8')
+      root.style.setProperty('--letter-spacing', '0.05em')
+    } else {
+      root.style.removeProperty('--line-height')
+      root.style.removeProperty('--letter-spacing')
+    }
+
+    // Apply font size
+    root.style.setProperty('--base-font-size', `${fontSize[0]}px`)
+
+    // Apply reduced motion
+    if (reducedMotion) {
+      root.style.setProperty('--transition-duration', '0ms')
+      root.classList.add('reduce-motion')
+    } else {
+      root.style.removeProperty('--transition-duration')
+      root.classList.remove('reduce-motion')
+    }
+
+    // Apply high contrast
+    if (highContrast) {
+      root.classList.add('high-contrast')
+    } else {
+      root.classList.remove('high-contrast')
+    }
+  }, [dyslexiaFont, increasedSpacing, fontSize, reducedMotion, highContrast])
 
   const handleSaveSettings = () => {
-    // In a real app, this would save to database/local storage
-    console.log("[v0] Saving accessibility settings:", {
-      voiceNarration,
-      soundEffects,
-      pomodoroTimer,
-      breakReminders,
-      reducedMotion,
-      highContrast,
-      dyslexiaFont,
-      increasedSpacing,
-      theme,
-      fontSize: fontSize[0],
-      focusDuration: focusDuration[0],
-    })
-    alert("Settings saved successfully!")
+    try {
+      const settings = {
+        voiceNarration,
+        soundEffects,
+        pomodoroTimer,
+        breakReminders,
+        reducedMotion,
+        highContrast,
+        dyslexiaFont,
+        increasedSpacing,
+        fontSize,
+        focusDuration,
+        voiceSpeed,
+        layoutMode,
+        sessionLength,
+        breakDuration,
+        savedAt: new Date().toISOString()
+      }
+      
+      localStorage.setItem('accessibility-settings', JSON.stringify(settings))
+      
+      // Show success feedback
+      const button = document.querySelector('[data-save-button]') as HTMLButtonElement
+      if (button) {
+        const originalText = button.textContent
+        button.textContent = '✓ Saved!'
+        button.disabled = true
+        setTimeout(() => {
+          button.textContent = originalText
+          button.disabled = false
+        }, 2000)
+      }
+    } catch (error) {
+      console.error('Failed to save settings:', error)
+      alert('Failed to save settings. Please try again.')
+    }
   }
 
   const webhookUrl =
@@ -226,7 +323,7 @@ export default function SettingsPage() {
             </div>
             <div className="space-y-3">
               <Label>Voice Speed</Label>
-              <Select defaultValue="normal">
+              <Select value={voiceSpeed} onValueChange={setVoiceSpeed}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -315,7 +412,7 @@ export default function SettingsPage() {
             </div>
             <div className="space-y-3">
               <Label>Layout Consistency</Label>
-              <Select defaultValue="consistent">
+              <Select value={layoutMode} onValueChange={setLayoutMode}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -383,26 +480,25 @@ export default function SettingsPage() {
           <CardContent className="space-y-6">
             <div className="space-y-3">
               <Label>Color Theme</Label>
-              <Select value={theme} onValueChange={setTheme}>
+              <Select value={theme} onValueChange={(value: any) => setTheme(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="light">Light Mode</SelectItem>
                   <SelectItem value="dark">Dark Mode</SelectItem>
-                  <SelectItem value="cream">Cream Mode (Dyslexia-Friendly)</SelectItem>
-                  <SelectItem value="pastel">Pastel Mode (Calming)</SelectItem>
+                  <SelectItem value="system">System</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="p-4 bg-muted/30 rounded-lg space-y-2">
               <p className="text-sm font-medium">Current Theme: {theme}</p>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                {theme === "cream"
-                  ? "Cream backgrounds reduce eye strain and are easier for dyslexic readers"
-                  : theme === "pastel"
-                    ? "Soft pastel colors create a calming environment for focused learning"
-                    : "Standard theme with optimal contrast and readability"}
+                {theme === "dark"
+                  ? "Dark mode reduces eye strain in low-light environments"
+                  : theme === "light"
+                    ? "Light mode provides clear contrast for daytime use"
+                    : "Automatically switches between light and dark based on your system preferences"}
               </p>
             </div>
           </CardContent>
@@ -424,7 +520,7 @@ export default function SettingsPage() {
           <CardContent className="space-y-6">
             <div className="space-y-3">
               <Label>Default Session Length</Label>
-              <Select defaultValue="30">
+              <Select value={sessionLength} onValueChange={setSessionLength}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -438,7 +534,7 @@ export default function SettingsPage() {
             </div>
             <div className="space-y-3">
               <Label>Break Duration</Label>
-              <Select defaultValue="5">
+              <Select value={breakDuration} onValueChange={setBreakDuration}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -466,7 +562,7 @@ export default function SettingsPage() {
                 </p>
               </div>
             </div>
-            <Button onClick={handleSaveSettings} size="lg">
+            <Button onClick={handleSaveSettings} size="lg" data-save-button>
               Save Settings
             </Button>
           </div>

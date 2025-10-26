@@ -86,6 +86,16 @@ type ProgressState = {
   }
 }
 
+function userIdHeader() {
+  if (typeof window === 'undefined') return {}
+  try {
+    const u = localStorage.getItem('auth_user')
+    if (!u) return {}
+    const parsed = JSON.parse(u)
+    return { 'x-user-id': String(parsed.id || 1) }
+  } catch { return {} }
+}
+
 export const useProgressStore = create<ProgressState>()(
   persist(
     (set, get) => ({
@@ -95,39 +105,83 @@ export const useProgressStore = create<ProgressState>()(
       studySessions: [],
 
       addInterviewAttempt: (attempt) =>
-        set((state) => ({
-          interviewAttempts: [
-            ...state.interviewAttempts,
-            {
-              ...attempt,
-              id: crypto.randomUUID(),
-              completedAt: new Date(),
-            },
-          ],
-        })),
+        set((state) => {
+          const record = {
+            ...attempt,
+            id: crypto.randomUUID(),
+            completedAt: new Date(),
+          }
+          // fire-and-forget persistence to backend
+          try {
+            fetch('/api/progress/interview', {
+              method: 'POST',
+headers: { 'Content-Type': 'application/json', ...userIdHeader() },
+              body: JSON.stringify({
+                type: record.type,
+                difficulty: record.difficulty,
+                score: record.score,
+                duration: record.duration,
+                questions: record.questions,
+              }),
+            }).catch(() => {})
+          } catch {}
+          return {
+            interviewAttempts: [
+              ...state.interviewAttempts,
+              record,
+            ],
+          }
+        }),
 
       addDSAAttempt: (attempt) =>
-        set((state) => ({
-          dsaAttempts: [
-            ...state.dsaAttempts,
-            {
-              ...attempt,
-              id: crypto.randomUUID(),
-              attemptedAt: new Date(),
-            },
-          ],
-        })),
+        set((state) => {
+          const record = {
+            ...attempt,
+            id: crypto.randomUUID(),
+            attemptedAt: new Date(),
+          }
+          try {
+            fetch('/api/progress/dsa', {
+              method: 'POST',
+headers: { 'Content-Type': 'application/json', ...userIdHeader() },
+              body: JSON.stringify({
+                company: record.company,
+                position: record.position,
+                topic: record.topic,
+                difficulty: record.difficulty,
+                correct: record.correct,
+              }),
+            }).catch(() => {})
+          } catch {}
+          return {
+            dsaAttempts: [
+              ...state.dsaAttempts,
+              record,
+            ],
+          }
+        }),
 
       addMentorSession: (session) =>
-        set((state) => ({
-          mentorSessions: [
-            ...state.mentorSessions,
-            {
-              ...session,
-              id: crypto.randomUUID(),
-            },
-          ],
-        })),
+        set((state) => {
+          const record = { ...session, id: crypto.randomUUID() }
+          try {
+            fetch('/api/progress/mentor', {
+              method: 'POST',
+headers: { 'Content-Type': 'application/json', ...userIdHeader() },
+              body: JSON.stringify({
+                topic: record.topic,
+                messageCount: record.messageCount,
+                durationMin: record.duration / 60,
+              }),
+            }).catch(() => {})
+          } catch {}
+          return {
+            mentorSessions: [
+              ...state.mentorSessions,
+              record,
+            ],
+          }
+        }),
 
       updateMentorSession: (id, updates) =>
         set((state) => ({
@@ -137,16 +191,28 @@ export const useProgressStore = create<ProgressState>()(
         })),
 
       addStudySession: (session) =>
-        set((state) => ({
-          studySessions: [
-            ...state.studySessions,
-            {
-              ...session,
-              id: crypto.randomUUID(),
-              completedAt: new Date(),
-            },
-          ],
-        })),
+        set((state) => {
+          const record = { ...session, id: crypto.randomUUID(), completedAt: new Date() }
+          try {
+            fetch('/api/progress/study', {
+              method: 'POST',
+headers: { 'Content-Type': 'application/json', ...userIdHeader() },
+              body: JSON.stringify({
+                topic: record.topic,
+                difficulty: record.difficulty,
+                questionsAttempted: record.questionsAttempted,
+                questionsCorrect: record.questionsCorrect,
+                durationMin: record.duration / 60,
+              }),
+            }).catch(() => {})
+          } catch {}
+          return {
+            studySessions: [
+              ...state.studySessions,
+              record,
+            ],
+          }
+        }),
 
       getTotalQuestions: () => {
         const state = get()

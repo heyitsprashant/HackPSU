@@ -152,3 +152,35 @@
     box-shadow: 0 8px 24px oklch(var(--foreground) / 0.1);
   }
 }
+
+/* Accessibility Features */
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce), (prefers-reduced-motion: no-preference) {
+  .reduce-motion * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High Contrast Mode */
+.high-contrast {
+  --foreground: oklch(0 0 0);
+  --background: oklch(1 0 0);
+  --border: oklch(0 0 0);
+}
+
+.high-contrast.dark {
+  --foreground: oklch(1 0 0);
+  --background: oklch(0 0 0);
+  --border: oklch(1 0 0);
+}
+
+/* Apply custom font family and spacing when set */
+body {
+  font-family: var(--font-family, var(--font-sans));
+  line-height: var(--line-height, 1.6);
+  letter-spacing: var(--letter-spacing, normal);
+  font-size: var(--base-font-size, 16px);
+}

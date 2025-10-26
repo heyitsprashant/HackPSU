@@ -1,53 +1,23 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { MessageSquare, Briefcase } from "lucide-react"
-import { ChatInterface } from "@/components/mentor/chat-interface"
-import { InterviewManager } from "@/components/mentor/interview-manager"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 export default function MentorPage() {
+  const router = useRouter()
+
+  useEffect(() => {
+    // Redirect to the new interview assistant page
+    router.replace('/dashboard/interview-assistant')
+  }, [router])
+
+  // Show a loading message while redirecting
   return (
-    <div className="space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-4xl font-bold text-foreground">AI Mentor</h1>
-        <p className="text-lg text-muted-foreground">
-          Get instant help and explanations from your personal AI mentor powered by Google Gemini 2.0
-        </p>
+    <div className="flex items-center justify-center min-h-[400px]">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
+        <p className="text-muted-foreground">Redirecting to AI Interview Assistant...</p>
       </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center">
-              <Briefcase className="h-6 w-6 text-accent" />
-            </div>
-            <div>
-              <CardTitle>Upcoming Interviews</CardTitle>
-              <CardDescription>Track your interviews and get personalized preparation</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <InterviewManager />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-secondary/10 flex items-center justify-center">
-              <MessageSquare className="h-6 w-6 text-secondary" />
-            </div>
-            <div>
-              <CardTitle>Chat with Your AI Mentor</CardTitle>
-              <CardDescription>Ask questions, get explanations, and learn at your own pace</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <ChatInterface />
-        </CardContent>
-      </Card>
     </div>
   )
 }

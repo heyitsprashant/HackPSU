@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { BookOpen, MessageSquare, Video, BarChart3, Sparkles, TrendingUp, Calendar } from "lucide-react"
 import { useProgressStore } from "@/lib/store/progress-store"
-import type { Interview } from "@/components/mentor/interview-manager"
+type Interview = { id: string; company: string; position: string; type: "technical"|"behavioral"|"system-design"|"coding"|"phone-screen"; date: string }
 
 export default function DashboardPage() {
   const {
@@ -21,6 +21,13 @@ export default function DashboardPage() {
   } = useProgressStore()
 
   const [upcomingInterviews, setUpcomingInterviews] = useState<Interview[]>([])
+  const [mounted, setMounted] = useState(false)
+  const [serverStats, setServerStats] = useState<null | { total_interviews: number; success_rate: number; study_hours: number; }>(null)
+
+  // Fix hydration by only rendering client-dependent values after mount
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     const stored = localStorage.getItem("mentorverse_interviews")
@@ -30,11 +37,24 @@ export default function DashboardPage() {
     }
   }, [])
 
-  const totalQuestions = getTotalQuestions()
-  const successRate = getSuccessRate()
-  const studyStreak = getStudyStreak()
-  const totalHours = getTotalHours()
-  const totalInterviews = interviewAttempts.length
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const res = await fetch('/api/dashboard/stats')
+        if (res.ok) {
+          const s = await res.json()
+          setServerStats(s)
+        }
+      } catch {}
+    })()
+  }, [])
+
+  // Calculate values only after mounted to prevent hydration errors
+  const totalQuestions = mounted ? getTotalQuestions() : 0
+  const successRate = mounted ? (serverStats?.success_rate ?? getSuccessRate()) : 0
+  const studyStreak = mounted ? getStudyStreak() : 0
+  const totalHours = mounted ? (serverStats?.study_hours ?? getTotalHours()) : 0
+  const totalInterviews = mounted ? (serverStats?.total_interviews ?? interviewAttempts.length) : 0
 
   const recentActivity = [
     ...dsaAttempts.slice(-5).map((a) => ({
@@ -42,14 +62,14 @@ export default function DashboardPage() {
       title: `${a.topic} - ${a.difficulty}`,
       subtitle: `DSA Practice • ${a.company}`,
       time: new Date(a.attemptedAt),
-      link: "/dashboard/mentor",
+link: "/interview-assistant",
     })),
     ...studySessions.slice(-5).map((s) => ({
       type: "study" as const,
       title: s.topic,
       subtitle: `Study Practice • ${s.questionsCorrect}/${s.questionsAttempted} correct`,
       time: new Date(s.completedAt),
-      link: "/dashboard/study",
+link: "/study",
     })),
     ...mentorSessions.slice(-5).map((m) => ({
       type: "mentor" as const,
@@ -63,7 +83,7 @@ export default function DashboardPage() {
       title: `${i.type} Interview`,
       subtitle: `Mock Interview • Score: ${i.score}%`,
       time: new Date(i.completedAt),
-      link: "/dashboard/interviews",
+link: "/mock-interviews",
     })),
   ]
     .sort((a, b) => b.time.getTime() - a.time.getTime())
@@ -86,15 +106,15 @@ export default function DashboardPage() {
     totalInterviews > 0 ? Math.round(interviewAttempts.reduce((sum, i) => sum + i.score, 0) / totalInterviews) : 0
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
       {/* Welcome Section */}
       <div className="space-y-2">
-        <h1 className="text-4xl font-bold text-foreground">Welcome Back!</h1>
-        <p className="text-lg text-muted-foreground">Ready to continue your learning journey?</p>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">Welcome Back!</h1>
+        <p className="text-sm sm:text-base lg:text-lg text-muted-foreground">Ready to continue your learning journey?</p>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Study Streak</CardTitle>
@@ -149,8 +169,8 @@ export default function DashboardPage() {
 
       {upcomingInterviews.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-2xl font-semibold text-foreground">Upcoming Interviews</h2>
-          <div className="grid gap-4 md:grid-cols-2">
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Upcoming Interviews</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {upcomingInterviews.slice(0, 2).map((interview) => (
               <Card key={interview.id} className="border-primary/20 bg-gradient-to-br from-primary/5 to-purple-500/5">
                 <CardHeader>
@@ -170,7 +190,7 @@ export default function DashboardPage() {
                     })}
                   </p>
                   <Button asChild variant="outline" size="sm" className="w-full bg-transparent">
-                    <Link href="/dashboard/mentor">Prepare Now</Link>
+<Link href="/interview-assistant">Prepare Now</Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -181,8 +201,8 @@ export default function DashboardPage() {
 
       {/* Quick Actions */}
       <div className="space-y-4">
-        <h2 className="text-2xl font-semibold text-foreground">Quick Actions</h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Quick Actions</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
             <CardHeader>
               <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2 group-hover:bg-primary/20 transition-colors">
@@ -193,7 +213,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <Button asChild className="w-full">
-                <Link href="/dashboard/study">Start Practicing</Link>
+<Link href="/study">Start Practicing</Link>
               </Button>
             </CardContent>
           </Card>
@@ -208,7 +228,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <Button asChild variant="secondary" className="w-full">
-                <Link href="/dashboard/mentor">Chat with Mentor</Link>
+<Link href="/interview-assistant">Chat with Mentor</Link>
               </Button>
             </CardContent>
           </Card>
@@ -223,7 +243,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <Button asChild variant="outline" className="w-full bg-transparent">
-                <Link href="/dashboard/interviews">Start Interview</Link>
+<Link href="/mock-interviews">Start Interview</Link>
               </Button>
             </CardContent>
           </Card>
@@ -238,7 +258,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <Button asChild variant="outline" className="w-full bg-transparent">
-                <Link href="/dashboard/progress">View Analytics</Link>
+<Link href="/analytics">View Analytics</Link>
               </Button>
             </CardContent>
           </Card>
@@ -248,33 +268,33 @@ export default function DashboardPage() {
       {/* Recent Activity */}
       {recentActivity.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-2xl font-semibold text-foreground">Recent Activity</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Recent Activity</h2>
           <Card>
             <CardHeader>
-              <CardTitle>Continue Where You Left Off</CardTitle>
-              <CardDescription>Pick up from your last session</CardDescription>
+              <CardTitle className="text-base sm:text-lg">Continue Where You Left Off</CardTitle>
+              <CardDescription className="text-sm">Pick up from your last session</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               {recentActivity.map((activity, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 sm:p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                    <div className="h-10 w-10 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center">
                       {activity.type === "study" && <BookOpen className="h-5 w-5 text-primary" />}
                       {activity.type === "mentor" && <MessageSquare className="h-5 w-5 text-secondary" />}
                       {activity.type === "interview" && <Video className="h-5 w-5 text-accent" />}
                       {activity.type === "dsa" && <BookOpen className="h-5 w-5 text-primary" />}
                     </div>
-                    <div>
-                      <p className="font-medium text-foreground">{activity.title}</p>
-                      <p className="text-sm text-muted-foreground">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground text-sm sm:text-base truncate">{activity.title}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">
                         {activity.subtitle} • {getTimeAgo(activity.time)}
                       </p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm" asChild>
+                  <Button variant="ghost" size="sm" asChild className="w-full sm:w-auto">
                     <Link href={activity.link}>Continue</Link>
                   </Button>
                 </div>
@@ -286,24 +306,24 @@ export default function DashboardPage() {
 
       {recentActivity.length === 0 && (
         <div className="space-y-4">
-          <h2 className="text-2xl font-semibold text-foreground">Get Started</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Get Started</h2>
           <Card>
             <CardContent className="py-8 text-center space-y-4">
               <div className="h-16 w-16 rounded-full bg-muted mx-auto flex items-center justify-center">
                 <Sparkles className="h-8 w-8 text-muted-foreground" />
               </div>
-              <div className="space-y-2">
-                <p className="font-medium">Start Your Learning Journey</p>
-                <p className="text-sm text-muted-foreground">
+              <div className="space-y-2 px-4">
+                <p className="font-medium text-sm sm:text-base">Start Your Learning Journey</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Begin with study practice or chat with your AI mentor to get personalized guidance
                 </p>
               </div>
-              <div className="flex gap-2 justify-center">
+              <div className="flex flex-col sm:flex-row gap-2 justify-center px-4 w-full sm:w-auto">
                 <Button asChild>
-                  <Link href="/dashboard/study">Start Practicing</Link>
+<Link href="/study">Start Practicing</Link>
                 </Button>
                 <Button asChild variant="outline">
-                  <Link href="/dashboard/mentor">Chat with Mentor</Link>
+<Link href="/interview-assistant">Chat with Mentor</Link>
                 </Button>
               </div>
             </CardContent>

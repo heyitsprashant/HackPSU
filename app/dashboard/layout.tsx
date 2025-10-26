@@ -28,10 +28,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname()
 
   const navItems = [
-    { href: "/dashboard/study", icon: BookOpen, label: "Study Practice", tooltip: "Study Practice" },
-    { href: "/dashboard/mentor", icon: MessageSquare, label: "AI Mentor", tooltip: "AI Mentor" },
-    { href: "/dashboard/interviews", icon: Video, label: "Mock Interviews", tooltip: "Mock Interviews" },
-    { href: "/dashboard/progress", icon: BarChart3, label: "Progress", tooltip: "Progress Tracker" },
+    { href: "/dashboard", icon: BookOpen, label: "Dashboard", tooltip: "Home" },
+    { href: "/study", icon: BookOpen, label: "Study Practice", tooltip: "Study Practice" },
+    { href: "/interview-assistant", icon: MessageSquare, label: "AI Interview Assistant", tooltip: "AI Interview Assistant" },
+    { href: "/mock-interviews", icon: Video, label: "Mock Interviews", tooltip: "Mock Interviews" },
+    { href: "/analytics", icon: BarChart3, label: "Analytics", tooltip: "Practice Analytics" },
   ]
 
   return (
@@ -99,9 +100,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <SidebarMenuButton
                     asChild
                     tooltip="Accessibility Settings"
-                    isActive={pathname === "/dashboard/settings"}
+                    isActive={pathname === "/settings" || pathname === "/accessibility"}
                   >
-                    <Link href="/dashboard/settings">
+                    <Link href="/settings">
                       <Settings className="size-4" />
                       <span>Accessibility</span>
                     </Link>
@@ -115,10 +116,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <SidebarFooter>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Sign Out">
-                <Link href="/login">
-                  <LogOut className="size-4" />
-                  <span>Sign Out</span>
+              <SidebarMenuButton asChild tooltip="Settings">
+                <Link href="/settings">
+                  <Settings className="size-4" />
+                  <span>Settings</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
